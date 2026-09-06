@@ -1,285 +1,325 @@
-FoodLens --- Food Additive Regulation Assistant
+# 🍎 FoodLens
 
-FoodLens is an AI-powered regulatory compliance assistant for querying
-food-additive regulations. It uses Retrieval-Augmented Generation (RAG)
-to retrieve relevant information from regulatory PDF documents and
-generate grounded answers with statutory source references.
+## 🤖 AI-Powered Food Additive Regulatory Assistant
 
-Features
+FoodLens is a RAG-based regulatory compliance chatbot that helps users ask natural-language questions about food-additive regulations. It retrieves relevant information from regulatory PDF documents and generates source-grounded answers with document and page references.
 
-PDF-based regulatory document ingestion
+## 🎯 Main Goal
 
-PyPDFLoader for loading regulatory PDFs
+The main goal of FoodLens is to make complex food-additive regulations easier to understand and access, especially for ordinary consumers.
 
-RecursiveCharacterTextSplitter for creating searchable chunks
+Instead of reading large and complicated regulatory documents, users can simply ask questions such as:
 
-Hugging Face embeddings using
+"What does INS 211 mean?"
+
+"Is sodium benzoate permitted in fruit juice?"
+
+The chatbot searches the provided regulatory documents and returns the relevant information with supporting sources.
+
+## 👥 Who Can Use FoodLens?
+
+FoodLens can be useful for:
+
+• 🛒 Consumers who want to understand food additives and INS numbers
+• 🏭 Food manufacturers who need quick access to additive regulations
+• 🧪 Food technologists working with food formulation
+• ✅ Quality and compliance teams
+• 🔬 Researchers and students studying food regulations
+
+## 🏗️ Architecture
+
+FoodLens follows a Retrieval-Augmented Generation (RAG) architecture.
+
+Document Processing:
+
+Regulatory PDF Documents
+↓
+PyPDFLoader
+↓
+Text Chunking
+↓
+Hugging Face Embeddings
+↓
+FAISS Vector Store
+
+Question Answering:
+
+User Question
+↓
+Query Embedding
+↓
+FAISS Retriever
+↓
+Relevant Regulatory Context
+↓
+Groq LLM
+↓
+Grounded Answer
+↓
+Document and Page Reference
+
+## 🔄 How It Works
+
+1. 📄 Regulatory PDF documents are loaded using PyPDFLoader.
+2. ✂️ The extracted text is divided into smaller chunks using RecursiveCharacterTextSplitter.
+3. 🧠 Each chunk is converted into a vector using a Hugging Face embedding model.
+4. 🗂️ The vectors are stored in FAISS.
+5. 🔎 When a user asks a question, the question is converted into an embedding.
+6. 🎯 FAISS retrieves the most relevant regulatory chunks.
+7. 📚 The retrieved context is passed to the Groq LLM.
+8. 🤖 The LLM generates an answer using the retrieved context.
+9. 📌 The chatbot displays the answer along with document and page references.
+
+## 🧠 Key Design Decisions
+
+### 🔍 Retrieval-Augmented Generation
+
+RAG was chosen because the chatbot needs to answer questions using specific regulatory documents rather than relying only on the LLM's general knowledge.
+
+This approach also helps reduce unsupported or hallucinated regulatory claims.
+
+### ✂️ Document Chunking
+
+RecursiveCharacterTextSplitter is used to divide large documents into smaller chunks while maintaining overlap between chunks.
+
+Current configuration:
+
+chunk_size: 1000
+chunk_overlap: 150
+
+Document source and page information are preserved to support traceability.
+
+### 🧠 Embedding Model
+
+FoodLens uses:
+
 sentence-transformers/all-MiniLM-L6-v2
 
-FAISS vector store for semantic retrieval
+This model converts documents and user questions into numerical vectors for semantic retrieval.
 
-MMR/similarity-based retrieval
+### 🔎 Vector Search
 
-Groq-hosted LLM for answer generation
+FAISS is used for vector similarity search.
 
-Grounded responses that avoid unsupported claims
+Current retrieval configuration:
 
-Document and page-level source citations
+k = 4
+fetch_k = 10
 
-Streamlit web interface
+MMR retrieval can be used to reduce redundancy among retrieved chunks.
 
-Conversation-style question and answer interface
+### 🤖 Language Model
 
-RAG Pipeline
+FoodLens uses:
 
-Regulatory PDFs
-      ↓
-PyPDFLoader
-      ↓
-Text Splitting
-      ↓
-Hugging Face Embeddings
-      ↓
-FAISS Vector Store
-      ↓
-Retriever
-      ↓
-Groq LLM
-      ↓
-Grounded Answer + Sources
+openai/gpt-oss-20b
 
-Project Structure
+The model is accessed through the Groq API and generates the final answer using the retrieved regulatory context.
 
-FoodLens/
-│
-├── app.py                    # Streamlit application
-├── retriever.py              # RAG retrieval and question-answering logic
-├── ingest.py                 # PDF ingestion and FAISS index creation
-├── requirements.txt          # Project dependencies
-├── pyproject.toml            # uv project/dependency configuration
-├── .env                      # API keys (do not commit)
-├── .gitignore
-│
-├── data/
-│   └── *.pdf                 # Regulatory PDF documents
-│
-└── vectorstore/
-    └── db_faiss/             # Generated FAISS index
+## 📌 Grounded Answers
 
-File names such as ingest.py can be changed to match the actual
-project files.
+FoodLens is designed to prefer verifiable information over unsupported guesses.
 
-Requirements
+The chatbot is instructed to:
 
-Python 3.13+
+• ✅ Answer using the retrieved regulatory context
+• ✅ Avoid unsupported assumptions
+• ✅ Avoid inventing regulatory limits
+• ✅ Clearly state when information is not available
+• ✅ Provide document and page references when available
 
-uv
+## 🛠️ Tech Stack
 
-A Groq API key
+Python 3.13+ — Core application development
 
-Internet access for downloading the embedding model the first time
+LangChain — RAG pipeline and orchestration
 
-Installation
+PyPDF / PyPDFLoader — PDF processing
 
-1. Clone the repository
+RecursiveCharacterTextSplitter — Document chunking
 
-git clone <your-repository-url>
-cd FoodLens
+Hugging Face — Embedding generation
 
-2. Create a virtual environment
+Sentence Transformers — Semantic embeddings
 
-uv venv
+FAISS — Vector storage and retrieval
 
-Activate it on Git Bash:
+Groq API — LLM inference
 
-source .venv/Scripts/activate
+GPT-OSS 20B — Language model
 
-On PowerShell:
+Streamlit — User interface
 
-.venv\Scripts\Activate.ps1
+uv — Environment and dependency management
 
-3. Install dependencies
+python-dotenv — Environment variable management
 
-If using requirements.txt:
+## 🤖 Models Used
 
-uv pip install -r requirements.txt
+### 🧠 Embedding Model
 
-For Windows environments where hard-linking causes an access error, use:
+sentence-transformers/all-MiniLM-L6-v2
 
-uv pip install --link-mode=copy -r requirements.txt
+Used to generate embeddings for regulatory documents and user questions.
 
-Alternatively, if dependencies are declared in pyproject.toml:
+### 💬 Language Model
 
-uv sync
+openai/gpt-oss-20b
 
-Environment Variables
+Used to generate the final response from the retrieved regulatory context.
 
-Create a .env file in the project root:
+## 🔑 API Used
+
+FoodLens uses the Groq API for LLM inference.
+
+The API key is stored in a .env file:
 
 GROQ_API_KEY=your_groq_api_key_here
 
-Never commit .env or expose your API key publicly.
+The API key should never be committed to GitHub or exposed publicly.
 
-Building the Vector Store
+## 📚 Knowledge Source
 
-Place the regulatory PDF files inside the data/ directory.
+The current knowledge base consists of food-additive regulatory PDF documents.
 
-Then run the ingestion script:
+Example:
 
-uv run ingest.py
+data/
+└── Food_Additives_Regulations.pdf
 
-This process:
+These documents are processed and converted into a FAISS vector store before they are used for question answering.
 
-Loads the PDF files.
+## 🎯 Scope
 
-Splits the documents into smaller chunks.
+The current version focuses on food-additive regulatory information contained in the provided documents.
 
-Generates embeddings for the chunks.
+Users can ask about:
 
-Stores the embeddings in FAISS.
+• 🧪 Food additives
+• 🔢 INS numbers
+• ✅ Permitted uses
+• 🍎 Food categories
+• 📏 Maximum permitted levels
+• 📋 Regulatory restrictions
+• 📖 Other information available in the indexed documents
 
-Saves the vector store under vectorstore/db_faiss.
 
-Running the Application
 
-Start the Streamlit application with:
+## 🚀 Future Improvements
 
-uv run streamlit run app.py
+### 📷 OCR and Image Support
 
-Then open the local URL shown by Streamlit, usually:
+Add OCR support so consumers can upload or photograph food labels.
 
-http://localhost:8501
+Food Label Image
+↓
+OCR
+↓
+Ingredients and Additives
+↓
+INS Numbers
+↓
+Regulatory Retrieval
 
-Do not run a Streamlit application with:
+### 🏷️ Product Verification
 
-uv run app.py
+The system could automatically detect additives from a food label and compare them with the relevant regulatory requirements.
 
-Use streamlit run so Streamlit can create its application context and
-session state correctly.
+Product Label
+↓
+OCR / Information Extraction
+↓
+Detected Additives
+↓
+Regulatory Retrieval
+↓
+Limit Comparison
+↓
+Compliance Result
+↓
+Supporting Evidence
 
-Example Questions
+### 🔎 Improved Retrieval
 
-You can test FoodLens with questions such as:
+Future versions could include:
 
-What does INS number mean?
+• Hybrid keyword and semantic search
+• Metadata filtering
+• Retrieval re-ranking
+• Better handling of regulatory tables
+• Improved chunking strategies
 
-Is sodium benzoate permitted in fruit juice?
+### 🌍 Expanded Regulatory Coverage
 
-What is the maximum permitted level of sodium benzoate in fruit
-juice?
+Support regulatory documents from multiple authorities, countries, and jurisdictions.
 
-What are the permitted uses of citric acid (INS 330)?
+### 📊 Compliance Reports
 
-What is the maximum permitted level of potassium sorbate (INS 202)?
+Generate reports containing:
 
-Are there any restrictions on the use of artificial colors?
+• Product information
+• Detected additives
+• Regulatory limits
+• Compliance status
+• Supporting sources
 
-What happens if an additive exceeds its permitted limit?
+### 🔄 Automatic Updates
 
-For questions whose answer is not supported by the provided regulatory
-documents, the assistant is designed to indicate that the information
-could not be verified from the available regulations rather than
-inventing an answer.
+Automatically process updated regulatory documents so the knowledge base stays current.
 
-Grounded Responses
+## ▶️ Quick Start
 
-FoodLens is designed to answer using the retrieved regulatory context.
+Create the virtual environment:
 
-The prompt instructs the model to:
+uv venv
 
-Answer only from the provided context.
+Activate the environment in Git Bash:
 
-Give a direct answer first.
+source .venv/Scripts/activate
 
-Avoid unsupported assumptions.
-
-Report permitted levels only when explicitly supported.
-
-Provide document and page references when available.
-
-Avoid health or safety claims unless they are present in the
-supplied regulatory context.
-
-Technologies Used
-
-Technology                           Purpose
-
-Python                               Application development
-LangChain                            RAG orchestration
-LangChain Community                  PDF loading and FAISS integration
-LangChain Hugging Face               Embedding integration
-Hugging Face Sentence Transformers   Text embeddings
-FAISS                                Vector similarity search
-Groq                                 LLM inference
-Streamlit                            Web interface
-uv                                   Python package and project management
-
-Important Notes
-
-Virtual Environment
-
-The .venv directory isolates project dependencies from the global
-Python environment. This prevents package-version conflicts between
-projects.
-
-uv
-
-uv is used to manage the Python environment and dependencies. For
-project dependencies, prefer:
-
-uv add package-name
-
-For installing an existing requirements.txt:
+Install dependencies:
 
 uv pip install -r requirements.txt
 
-FAISS Vector Store
+For Windows hard-link or cloud-sync issues:
 
-The FAISS database is generated from the regulatory PDFs. If the source
-documents change, rebuild the vector store so that the index reflects
-the updated documents.
+uv pip install --link-mode=copy -r requirements.txt
 
-Embedding Model
+Create a .env file:
 
-The same embedding model should be used when creating and loading the
-FAISS vector store:
+GROQ_API_KEY=your_groq_api_key_here
 
-sentence-transformers/all-MiniLM-L6-v2
+Place regulatory PDFs inside:
 
-Security
+data/
 
-Do not commit API keys or secrets.
+Build the FAISS vector store:
 
-Make sure .gitignore contains:
+uv run ingest.py
+
+Start the Streamlit application:
+
+uv run streamlit run app.py
+
+Open the application:
+
+[http://localhost:8501](http://localhost:8501)
+
+## 🔒 Security
+
+Never commit API keys, secrets, or virtual environments.
+
+Recommended .gitignore entries:
 
 .env
 .venv/
-__pycache__/
+**pycache**/
 *.pyc
 
-Future Improvements
+## ⚠️ Disclaimer
 
-OCR support for scanned regulatory documents
+FoodLens is an educational software project designed to help users search and understand the provided regulatory documents.
 
-Image/product-label upload
+It is not a substitute for official regulations, legal advice, regulatory advice, medical advice, or professional compliance review.
 
-Automatic extraction of food additive names and INS numbers
-
-Better citation display
-
-Hybrid keyword + semantic retrieval
-
-Re-ranking of retrieved regulatory passages
-
-User authentication
-
-Deployment to a cloud platform
-
-Automated regulatory document updates
-
-Disclaimer
-
-FoodLens is an educational/software project intended to assist with
-searching and understanding the provided regulatory documents. It should
-not be treated as a substitute for official legal, regulatory, medical,
-or professional compliance advice.
+Important regulatory decisions should always be verified against the latest official and authoritative sources.
